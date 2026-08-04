@@ -47,18 +47,50 @@ Design decisions I'd defend in a review:
 
 ## Results
 
-**Status: training run pending.** This repo's rule is that no metric appears
-here unless it exists in `outputs/metrics.json`, written by `evaluate.py`
-against the held-out test set. That run hasn't happened yet, so there are no
-numbers to show. When it lands, this section gets per-class IoU/Dice, the
-training curve, and sample predictions from `outputs/samples/`.
+Trained 2026-08-04 on a T4 GPU. 4,000 train / 800 val / 800 test tiles,
+split at the source-image level. 25 epochs, early-stopped after 8 without
+validation improvement; best checkpoint epoch 17. Every number below comes
+from `outputs/metrics.json`, written by `evaluate.py` against the held-out
+test set.
+
+| Class | IoU | Dice | Recall | Precision |
+|---|---|---|---|---|
+| background | 0.8494 | 0.9186 | 0.9436 | 0.8949 |
+| roof | 0.7043 | 0.8265 | 0.7928 | 0.8632 |
+| vegetation | 0.8095 | 0.8947 | 0.8641 | 0.9277 |
+| **mean** | **0.7878** | **0.8799** | | |
+
+Inference: 3.86 ms per 256×256 tile on the T4.
+
+Roof is the hardest class and the one the product depends on most. It's also
+the rarest — 2.1M roof pixels in the test set against 29.5M background — and
+the highest-detail, so boundary error costs proportionally more. Roof recall
+(0.793) sitting below roof precision (0.863) means the model misses roof
+area more often than it invents it, which biases quotes low. The confusion
+matrix shows why: 20.5% of true roof pixels are predicted as background,
+while only 5,453 are confused with vegetation. The failure is missed roofs,
+not misclassified ones.
+
+![Roof segmentation and polygon extraction](outputs/samples/sample_05.png)
+
+*Input tile → predicted mask → extracted polygons. Pitched residential roofs
+like these are the QuickQuote target case and segment cleanly.*
+
+![A failure case](outputs/samples/sample_02.png)
+
+*Failure case: large flat industrial roofs whose texture matches adjacent
+pavement. The model finds one small patch, which then falls below the
+100 px contour threshold — so the tile yields zero polygons. Written up in
+[LIMITATIONS.md](LIMITATIONS.md).*
+
+Full per-epoch training curve: [`outputs/training_log.csv`](outputs/training_log.csv).
 
 ## Project status
 
 | Component | Status |
 |---|---|
-| Segmentation pipeline (data → train → eval → polygons) | Code complete, training run pending |
-| Polygon extraction (class map → contours → simplified polygons) | Code complete, pending trained weights |
+| Segmentation pipeline (data → train → eval → polygons) | Trained and evaluated — see Results |
+| Polygon extraction (class map → contours → simplified polygons) | Implemented |
 | Frontend (satellite view, region highlight, service selection) | Planned |
 | Pricing v1: deterministic area-based rate card (`src/pricing.py`) | Implemented |
 | Comp-based pricing (location + neighbor spend ML) | Planned — requires transaction data |
@@ -111,10 +143,13 @@ CONCEPTS.md            the design reasoning, written to be explainable
 
 ## Limitations
 
-Tracked in [LIMITATIONS.md](LIMITATIONS.md), populated only from observed
-behavior. One is known by design already: training imagery is Polish aerial
-orthophotography (25/50 cm), while production would consume maps-API
-satellite tiles — that domain gap is real and untested.
+Tracked in [LIMITATIONS.md](LIMITATIONS.md), written from observed behavior
+only. The headline ones: roofs are under-segmented (20.5% of roof pixels
+lost to background), large flat industrial roofs can fail completely, and
+training showed mild overfitting from around epoch 10. Known by design:
+training imagery is Polish aerial orthophotography (25/50 cm) while
+production would consume maps-API satellite tiles — that domain gap is real
+and untested.
 
 ## License
 
