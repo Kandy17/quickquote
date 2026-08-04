@@ -1,0 +1,47 @@
+{
+  "checkpoint": "/content/quickquote/outputs/checkpoints/best.pt",
+  "checkpoint_epoch": 17,
+  "date": "2026-08-04 21:39",
+  "device": "cuda",
+  "n_test_tiles": 800,
+  "class_names": [
+    "background",
+    "roof",
+    "vegetation"
+  ],
+  "iou_per_class": {
+    "background": 0.8494,
+    "roof": 0.7043,
+    "vegetation": 0.8095
+  },
+  "dice_per_class": {
+    "background": 0.9186,
+    "roof": 0.8265,
+    "vegetation": 0.8947
+  },
+  "mean_iou": 0.7878,
+  "mean_dice": 0.8799,
+  "test_pixel_support": {
+    "background": 29450178,
+    "roof": 2080518,
+    "vegetation": 20898104
+  },
+  "mean_inference_ms_per_tile": 3.86,
+  "confusion_matrix_rows_true_cols_pred": [
+    [
+      27789054,
+      258933,
+      1402191
+    ],
+    [
+      425666,
+      1649399,
+      5453
+    ],
+    [
+      2838369,
+      2470,
+      18057265
+    ]
+  ]
+}
