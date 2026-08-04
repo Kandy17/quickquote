@@ -1,0 +1,16 @@
+# environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# data — never commit the dataset
+data/
+
+# heavy training artifacts (keep logs/metrics/samples, skip weights)
+outputs/checkpoints/
+
+# OS noise / stray logs
+.DS_Store
+Thumbs.db
+pip_torch.log
