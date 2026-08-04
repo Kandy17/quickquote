@@ -60,7 +60,22 @@ training curve, and sample predictions from `outputs/samples/`.
 | Segmentation pipeline (data → train → eval → polygons) | Code complete, training run pending |
 | Polygon extraction (class map → contours → simplified polygons) | Code complete, pending trained weights |
 | Frontend (satellite view, region highlight, service selection) | Planned |
-| Comp-based pricing engine (location + neighbor spend) | Planned |
+| Pricing v1: deterministic area-based rate card (`src/pricing.py`) | Implemented |
+| Comp-based pricing (location + neighbor spend ML) | Planned — requires transaction data |
+
+## Pricing
+
+`src/pricing.py` turns extracted polygons into a quote: pixel area × GSD²
+(meters per pixel of the source imagery) → square feet → per-sqft rate for
+the selected service (roofing / mowing / landscaping), with a small-job
+floor. Rates are configurable demo values, not market data. The comp-based
+component — adjusting quotes by what neighboring properties paid — is an
+explicit stub (`comp_adjustment()` returns 1.0) because it needs historical
+transaction data that doesn't exist yet; the stub documents the intended v2.
+
+```bash
+python src/pricing.py outputs/samples/polygons_00.json --service roofing
+```
 
 ## Setup
 
@@ -89,6 +104,7 @@ src/dataset.py         Dataset + albumentations pipelines
 src/train.py           training loop, CSV logging, checkpoints, early stop
 src/evaluate.py        held-out IoU/Dice → metrics.json (sole source of truth)
 src/infer.py           inference → contours → polygons + overlays
+src/pricing.py         polygon area × GSD → rate-card quote (comps stubbed)
 LIMITATIONS.md         only limitations actually observed, with evidence
 CONCEPTS.md            the design reasoning, written to be explainable
 ```
